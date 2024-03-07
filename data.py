@@ -51,5 +51,3 @@ if __name__ == '__main__':
         save(currencies, CURRENCY_FILE)
 
     print(currencies)
-
-    # print(download('USD'))
