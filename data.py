@@ -46,7 +46,7 @@ def save(data: dict, file):
 
 def load(file):
     with open(file, 'r') as f:
-        # NOTE: context manager acts as a 'finally' clause
+        # NOTE: context manager acts as a 'finally' clause before return
         data = json.load(f)
         logging.info(f'loaded data from {file}')
         return data
@@ -70,5 +70,15 @@ if __name__ == '__main__':
         save(currencies, CURRENCY_FILE)
 
     vertices = [Vertex(code, name) for code, name in currencies.items()]
+    # print(vertices)
 
-    print(currencies)
+    # get edge weights
+    edges = []
+    for cur in currencies.keys():
+        exchange_rates = download(cur)
+        for to_cur, rate in exchange_rates.items():
+            if to_cur in currencies and to_cur != cur:
+                edges.append(Edge(cur, to_cur, rate))
+    # print(edges)
+
+    # print(currencies)
