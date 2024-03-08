@@ -2,9 +2,28 @@ import requests
 import os
 import json
 import logging
-
+from dataclasses import dataclass
 
 CURRENCY_FILE = 'currency.json'
+
+
+class Graph:
+    def __init__(self, vertices: list, edges: list) -> None:
+        self.vertices = vertices
+        self.edges = edges  # list of (u,v), w
+
+
+@dataclass
+class Vertex:
+    code: str
+    name: str
+
+
+@dataclass
+class Edge:
+    u: str
+    v: str
+    w: float
 
 
 def download_currencies() -> dict:
@@ -21,15 +40,15 @@ def download(curr) -> dict:
 
 def save(data: dict, file):
     with open(file, 'w') as f:
-        json.dump(data, f)
-        logging.info(f'Wrote data to {file}')
+        json.dump(data, f, ensure_ascii=False)
+        logging.info(f'wrote data to {file}')
 
 
 def load(file):
     with open(file, 'r') as f:
         # NOTE: context manager acts as a 'finally' clause
         data = json.load(f)
-        logging.info(f'Loaded data from {file}')
+        logging.info(f'loaded data from {file}')
         return data
 
 
@@ -49,5 +68,7 @@ if __name__ == '__main__':
     else:
         currencies = download_currencies()
         save(currencies, CURRENCY_FILE)
+
+    vertices = [Vertex(code, name) for code, name in currencies.items()]
 
     print(currencies)
