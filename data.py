@@ -8,15 +8,26 @@ CURRENCY_FILE = 'currency.json'
 
 
 class Graph:
-    def __init__(self, vertices: list, edges: list) -> None:
+    def __init__(self, vertices: dict, edges: list) -> None:
         self.vertices = vertices
-        self.edges = edges  # list of (u,v), w
+        self.edges = edges  # list of (u,v,w)
+
+    def __str__(self) -> str:
+        s = 'Graph\n'
+        for vert in self.vertices.values():
+            for e in self.edges:
+                if e.u == vert.code:
+                    s += f'{e.u} -> {e.v} [{e.w}]\n'
+            s += '----------\n'
+        return s
 
 
 @dataclass
 class Vertex:
     code: str
     name: str
+    distance: float = float('inf')
+    predecessor = None  # Vertex
 
 
 @dataclass
@@ -24,6 +35,25 @@ class Edge:
     u: str
     v: str
     w: float
+
+
+def bellman_ford(graph: Graph):
+    # pick arbitrary source
+    source: Vertex = graph.vertices['USD']
+
+    # 1. initialize graph
+    # vertex distances already initialized to infinity, predecessor to None
+    source.distance = 0
+
+    # 2. relax edges |V|-1 times
+    for _ in range(len(graph.vertices)-1):
+        for (u, v, w) in graph.edges:
+            if graph.vertices[u].distance + w < graph.vertices[v]:
+                # relax edge
+                graph.vertices[v] = graph.vertices[u].distance + w
+                graph.vertices[v].predecessor = graph.vertices[u]
+
+    # 3. check for negative weight cycles - TODO
 
 
 def download_currencies() -> dict:
@@ -69,10 +99,12 @@ if __name__ == '__main__':
         currencies = download_currencies()
         save(currencies, CURRENCY_FILE)
 
-    vertices = [Vertex(code, name) for code, name in currencies.items()]
+    vertices = {code: Vertex(code, name) for code, name in currencies.items()}
     # print(vertices)
 
     # get edge weights
+
+    # TODO: store edge weights to prevent unnecessary calls to API
     edges = []
     for cur in currencies.keys():
         exchange_rates = download(cur)
@@ -80,5 +112,9 @@ if __name__ == '__main__':
             if to_cur in currencies and to_cur != cur:
                 edges.append(Edge(cur, to_cur, rate))
     # print(edges)
+
+    graph = Graph(vertices, edges)
+
+    print(graph)
 
     # print(currencies)
